@@ -15,7 +15,7 @@ public class CallbackKafkaProducer {
     private static final Logger logger = LoggerFactory.getLogger(CallbackKafkaProducer.class);
 
     public static void main(String[] args) {
-        String bootstrapServer = "localhost:9092"; // TODO read from properties.
+        String bootstrapServer = "localhost:9092";
 
         // Step-01: Create Producer Properties
         Properties producerProperties = new Properties();
