@@ -38,7 +38,7 @@ public class BasicKafkaProducer {
          * flush and close the KafkaProducer and produce the record.
          */
         try (var kafkaProducer = new KafkaProducer<String, String>(producerProperties)) {
-            ProducerRecord<String, String> producerRecord = new ProducerRecord<String, String>("binarray_dev_topic", "Hello from Java! " + new Date());
+            ProducerRecord<String, String> producerRecord = new ProducerRecord<>("binarray_dev_topic", "Hello from Java! " + new Date());
 
             // Step-03: Produce Messages
             kafkaProducer.send(producerRecord);

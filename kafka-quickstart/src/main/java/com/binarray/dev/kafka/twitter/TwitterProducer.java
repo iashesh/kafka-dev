@@ -36,9 +36,7 @@ public class TwitterProducer {
     public static void main(String[] args) {
        new TwitterProducer().produce();
 
-       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Exiting application.");
-       }));
+       Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Exiting application.")));
     }
 
     /**
@@ -49,10 +47,10 @@ public class TwitterProducer {
         KafkaProducer kafkaProducer = null;
         ProducerRecord<String, String> producerRecord = null;
         try {
-            /** Set up your blocking queues:
+            /* Set up your blocking queues:
              * Be sure to size these properly based on expected TPS (Transactions Per Second) of your stream.
              */
-            BlockingQueue<String> tweetsQueue = new LinkedBlockingQueue<String>(1000);
+            BlockingQueue<String> tweetsQueue = new LinkedBlockingQueue<>(1000);
             // Create twitter client
             client = createHosebirdClient(tweetsQueue);
             // Attempts to establish a connection.
@@ -65,7 +63,7 @@ public class TwitterProducer {
             while (!client.isDone()) {
                 String strTweet = tweetsQueue.poll(5, TimeUnit.SECONDS);
                 logger.info("Tweet JSON: " + strTweet);
-                producerRecord = new ProducerRecord<String, String>("twitter_kafka_topic", strTweet);
+                producerRecord = new ProducerRecord<>("twitter_kafka_topic", strTweet);
                 kafkaProducer.send(producerRecord, (recordMetadata, ex) -> {
                     if (ex != null) {
                         logger.error("Error occurred.", ex);
@@ -89,10 +87,11 @@ public class TwitterProducer {
     /**
      * Create a hosebird client for streaming twitter tweets.
      *
-     * @param tweetsQueue
-     * @return
+     * @param tweetsQueue tweets queue
+     * @return Client object.
      */
     private Client createHosebirdClient(BlockingQueue<String> tweetsQueue) {
+        Client hosebirdClient = null;
         Properties twitterConfig = KafkaUtils.loadConfig("twitter.properties");
         /** Declare the host you want to connect to, the endpoint,
          * and authentication (basic auth or oauth)
@@ -121,7 +120,7 @@ public class TwitterProducer {
                 .endpoint(hosebirdEndpoint)
                 .processor(new StringDelimitedProcessor(tweetsQueue));
 
-        Client hosebirdClient = builder.build();
+        hosebirdClient = builder.build();
         return hosebirdClient;
     }
 

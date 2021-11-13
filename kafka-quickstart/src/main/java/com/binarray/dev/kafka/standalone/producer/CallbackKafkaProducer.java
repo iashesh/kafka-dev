@@ -29,7 +29,7 @@ public class CallbackKafkaProducer {
          */
         try (var kafkaProducer = new KafkaProducer<String, String>(producerProperties)) {
             for (int i = 0; i < 10; i++) {
-                ProducerRecord<String, String> producerRecord = new ProducerRecord<String, String>("binarray_dev_topic", "Hello from Java Callback! " + i);
+                ProducerRecord<String, String> producerRecord = new ProducerRecord<>("binarray_dev_topic", "Hello from Java Callback! " + i);
 
                 // Step-03: Produce Messages
                 kafkaProducer.send(producerRecord, (recordMetadata, e) -> {

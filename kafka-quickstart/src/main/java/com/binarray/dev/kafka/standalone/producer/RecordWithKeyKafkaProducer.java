@@ -34,7 +34,7 @@ public class RecordWithKeyKafkaProducer {
             for (int i = 0; i < 10; i++) {
                 String value = "Hello from Java with Keys! " + i;
                 String key = "key_" + i;
-                ProducerRecord<String, String> producerRecord = new ProducerRecord<String, String>(topic, key, value);
+                ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, key, value);
 
                 // Step-03: Produce Messages
                 kafkaProducer.send(producerRecord, (recordMetadata, e) -> {
