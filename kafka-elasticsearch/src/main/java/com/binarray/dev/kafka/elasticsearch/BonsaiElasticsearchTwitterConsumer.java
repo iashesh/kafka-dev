@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * This is twitter consumer and will upload tweets in Elastic search cloud.
+ * This is Twitter consumer and will upload tweets in Elastic search cloud.
  *
  * @author Ashesh
  */
@@ -58,7 +58,6 @@ public class BonsaiElasticsearchTwitterConsumer {
         int consumedTweetCount = 0;
         try {
             while(keepConsuming) {
-
                 ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.of(1000, ChronoUnit.MILLIS));
                 for(ConsumerRecord<String, String> record : records) {
                     logger.info("Record received. \n"
@@ -101,7 +100,7 @@ public class BonsaiElasticsearchTwitterConsumer {
 
     /**
      * Create Kafka Consumer
-     * @param topic
+     * @param topic kafka topic
      * @return KafkaConsumer
      */
     private static KafkaConsumer<String, String> createKafkaConsumer(String topic) {
@@ -114,7 +113,7 @@ public class BonsaiElasticsearchTwitterConsumer {
                         ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         // Step-02: Create Kafka Consumer
-        var kafkaConsumer = new KafkaConsumer(consumerConfig);
+        var kafkaConsumer = new KafkaConsumer<String, String>(consumerConfig);
 
         // Step-03: Subscribe to Topic
         kafkaConsumer.subscribe(List.of(topic));
@@ -125,7 +124,7 @@ public class BonsaiElasticsearchTwitterConsumer {
     /**
      * Create Elasticsearch Client.
      *
-     * @return
+     * @return RestHighLevelClient
      */
     private static RestHighLevelClient createElasticsearchRestClient() {
         RestHighLevelClient restClient = null;
