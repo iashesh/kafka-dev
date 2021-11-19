@@ -45,7 +45,7 @@ public class TwitterProducer {
     private void produce() {
         Client client = null;
         KafkaProducer kafkaProducer = null;
-        ProducerRecord<String, String> producerRecord = null;
+        ProducerRecord<String, String> producerRecord;
         try {
             /* Set up your blocking queues:
              * Be sure to size these properly based on expected TPS (Transactions Per Second) of your stream.
@@ -62,19 +62,21 @@ public class TwitterProducer {
             // Send tweets to Kafka Topic
             while (!client.isDone()) {
                 String strTweet = tweetsQueue.poll(5, TimeUnit.SECONDS);
-                logger.info("Tweet JSON: " + strTweet);
-                producerRecord = new ProducerRecord<>("twitter_kafka_topic", strTweet);
-                kafkaProducer.send(producerRecord, (recordMetadata, ex) -> {
-                    if (ex != null) {
-                        logger.error("Error occurred.", ex);
-                    } else {
-                        logger.info("Tweet successfully produced.\n"
-                                + "Topic: " + recordMetadata.topic() + "\n"
-                                + "Partition: " + recordMetadata.partition() + "\n"
-                                + "Offset: " + recordMetadata.offset() + "\n"
-                                + "Date: " + new Date(recordMetadata.timestamp()) + "\n");
-                    }
-                });
+                if (strTweet != null) {
+                    logger.info("Tweet JSON: " + strTweet);
+                    producerRecord = new ProducerRecord<>("twitter_kafka_topic", strTweet);
+                    kafkaProducer.send(producerRecord, (recordMetadata, ex) -> {
+                        if (ex != null) {
+                            logger.error("Error occurred.", ex);
+                        } else {
+                            logger.info("Tweet successfully produced.\n"
+                                    + "Topic: " + recordMetadata.topic() + "\n"
+                                    + "Partition: " + recordMetadata.partition() + "\n"
+                                    + "Offset: " + recordMetadata.offset() + "\n"
+                                    + "Date: " + new Date(recordMetadata.timestamp()) + "\n");
+                        }
+                    });
+                }
             }
         } catch (Exception ex) {
             logger.error("ERROR: ERROR: ERROR:", ex);
@@ -104,6 +106,7 @@ public class TwitterProducer {
         //hosebirdEndpoint.followings(followings);
 
         List<String> terms = List.of("kafka", "confluent", "bitcoin");   // Search Terms
+        //List<String> terms = List.of("binarray");     // Go and tweet about some specific keywords.
         hosebirdEndpoint.trackTerms(terms);
 
         // Read secrets from a config file.

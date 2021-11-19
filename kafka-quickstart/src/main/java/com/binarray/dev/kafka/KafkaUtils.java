@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Utility class to be used by twitter producer and consumer.
+ * Utility class to be used for common methods.
  *
  * @author Ashesh
  */
@@ -15,13 +15,13 @@ public class KafkaUtils {
     private static final Logger logger = LoggerFactory.getLogger(KafkaUtils.class);
 
     public static Properties loadConfig(String configFile) {
-        var twitterConfig = new Properties();
+        var configProps = new Properties();
         try(var inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(configFile)) {
-            twitterConfig.load(inputStream);
+            configProps.load(inputStream);
         } catch (IOException ioEx) {
             logger.error("Error loading properties.", ioEx);
         }
-        return twitterConfig;
+        return configProps;
     }
 
 }
