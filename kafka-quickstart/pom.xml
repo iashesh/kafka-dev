@@ -5,7 +5,7 @@
     <parent>
         <artifactId>kafka-dev</artifactId>
         <groupId>com.binarray.dev</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -17,6 +17,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.binarray.dev</groupId>
+            <artifactId>kafka-common</artifactId>
+            <version>1.0</version>
+        </dependency>
         <!-- Twitter Hosebird Client API Dependency -->
         <!-- https://mvnrepository.com/artifact/com.twitter/hbc-core -->
         <dependency>

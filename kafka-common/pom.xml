@@ -9,25 +9,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kafka-elasticsearch</artifactId>
+    <artifactId>kafka-common</artifactId>
 
     <properties>
         <maven.compiler.source>14</maven.compiler.source>
         <maven.compiler.target>14</maven.compiler.target>
     </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.binarray.dev</groupId>
-            <artifactId>kafka-common</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <!-- Elasticsearch API Dependency -->
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>6.4.0</version>
-        </dependency>
-    </dependencies>
 
 </project>

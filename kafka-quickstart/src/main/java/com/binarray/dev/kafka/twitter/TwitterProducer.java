@@ -1,7 +1,7 @@
 package com.binarray.dev.kafka.twitter;
 
 
-import com.binarray.dev.kafka.KafkaUtils;
+import com.binarray.dev.kafka.common.FileUtils;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Client;
 import com.twitter.hbc.core.Constants;
@@ -94,7 +94,7 @@ public class TwitterProducer {
      */
     private Client createHosebirdClient(BlockingQueue<String> tweetsQueue) {
         Client hosebirdClient = null;
-        Properties twitterConfig = KafkaUtils.loadConfig("twitter.properties");
+        Properties twitterConfig = FileUtils.loadProperties("twitter.properties");
         /** Declare the host you want to connect to, the endpoint,
          * and authentication (basic auth or oauth)
          */
@@ -134,7 +134,7 @@ public class TwitterProducer {
      */
     private KafkaProducer createKafkaProducer() {
         KafkaProducer kafkaProducer =null;
-        Properties twitterConfig = KafkaUtils.loadConfig("kafka.properties");
+        Properties twitterConfig = FileUtils.loadProperties("kafka.properties");
         Properties producerProperties = new Properties();
         producerProperties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, twitterConfig.getProperty("bootstrap.servers"));
         producerProperties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());

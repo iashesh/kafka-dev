@@ -7,10 +7,11 @@
     <groupId>com.binarray.dev</groupId>
     <artifactId>kafka-dev</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <modules>
         <module>kafka-quickstart</module>
         <module>kafka-elasticsearch</module>
+        <module>kafka-common</module>
     </modules>
 
     <properties>
