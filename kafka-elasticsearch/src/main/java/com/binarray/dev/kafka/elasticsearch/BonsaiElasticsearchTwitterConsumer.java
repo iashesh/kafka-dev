@@ -1,5 +1,6 @@
 package com.binarray.dev.kafka.elasticsearch;
 
+import com.binarray.dev.kafka.common.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -26,7 +27,6 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * This is Twitter consumer and will upload tweets in Elastic search cloud.
@@ -60,7 +60,7 @@ public class BonsaiElasticsearchTwitterConsumer {
             while(keepConsuming) {
                 ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.of(1000, ChronoUnit.MILLIS));
                 for(ConsumerRecord<String, String> record : records) {
-                    logger.info("Record received. \n"
+                    logger.info("Record received from Kafka topic. \n"
                             + "Partition: " + record.partition() + "\n"
                             + "Offset: " + record.offset());
 
@@ -68,10 +68,10 @@ public class BonsaiElasticsearchTwitterConsumer {
                     indexRequest.source(record.value(), XContentType.JSON);
 
                     IndexResponse indexResponse = restClient.index(indexRequest, RequestOptions.DEFAULT);
-                    logger.info("Record indexed. \n"
+                    logger.info("Record indexed in Elasticsearch. \n"
                             + "Id: " + indexResponse.getId());
 
-                    // Add a delay to see what's printing on console
+                    // Added a delay to see what's printing on console
                     Thread.sleep(1000);
 
                     // Exit after max limit number of tweets
@@ -128,14 +128,8 @@ public class BonsaiElasticsearchTwitterConsumer {
      */
     private static RestHighLevelClient createElasticsearchRestClient() {
         RestHighLevelClient restClient = null;
-        var configProps = new Properties();
-        try(var inputStream
-                    = Thread.currentThread().getContextClassLoader()
-                        .getResourceAsStream("properties/elasticsearch.properties")) {
-            configProps.load(inputStream);
-        } catch (IOException ioEx) {
-            logger.error("Error loading properties.", ioEx);
-        }
+        var configProps = FileUtils.loadProperties("properties/elasticsearch.properties");
+
         if (configProps.getProperty("elasticsearch.url") != null) {
             String connectionString = configProps.getProperty("elasticsearch.url");
 
