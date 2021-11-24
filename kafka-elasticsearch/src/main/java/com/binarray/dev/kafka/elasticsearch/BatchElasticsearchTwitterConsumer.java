@@ -3,8 +3,9 @@ package com.binarray.dev.kafka.elasticsearch;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -16,12 +17,14 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 /**
- * This is Twitter consumer and will upload tweets in Elastic search cloud.
+ * This is idempotent Twitter consumer and will upload tweets in Elastic search cloud in bulk.
  *
  * @author Ashesh
  */
-public class BonsaiElasticsearchTwitterConsumer {
-    private static final Logger logger = LoggerFactory.getLogger(BonsaiElasticsearchTwitterConsumer.class);
+public class BatchElasticsearchTwitterConsumer {
+    private static final Logger logger = LoggerFactory.getLogger(BatchElasticsearchTwitterConsumer.class);
+    private static final String BOOTSTRAP_SERVER = "localhost:9092";
+    private static final String GROUP_ID = "binarray-twitter-consumer";
     private static final String KAFKA_TOPIC = "twitter_kafka_topic";
     private static final String ELASTICSEARCH_INDEX = "twitter_dev";
     /*
@@ -44,28 +47,42 @@ public class BonsaiElasticsearchTwitterConsumer {
         try {
             while(keepConsuming) {
                 ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.of(1000, ChronoUnit.MILLIS));
+                BulkRequest bulkRequest = new BulkRequest();
+                logger.info("Read {} records from topic.", (records != null ? records.count() : 0));
+
                 for(ConsumerRecord<String, String> record : records) {
-                    logger.info("Record received from Kafka topic. \n"
-                            + "Partition: " + record.partition() + "\n"
-                            + "Offset: " + record.offset());
+                    // Generate keys for the record (comment the line for either approaches)
+                    String recordKey = null;
+                    // Option-1: Create key using the record (topic, partition, offset)
+                    //recordKey = record.topic() + "_" + record.partition() + "_" + record.offset();
 
-                    IndexRequest indexRequest = new IndexRequest(ELASTICSEARCH_INDEX, ELASTICSEARCH_TYPE);
-                    indexRequest.source(record.value(), XContentType.JSON);
+                    // Option-2: Create key by extracting key from record (if exists)
+                    recordKey = TwitterConsumerUtils.getKeyForTweet(record.value());
 
-                    IndexResponse indexResponse = restClient.index(indexRequest, RequestOptions.DEFAULT);
+                    if (recordKey != null) {
+                        IndexRequest indexRequest = new IndexRequest(ELASTICSEARCH_INDEX, ELASTICSEARCH_TYPE, recordKey);
+                        indexRequest.source(record.value(), XContentType.JSON);
+
+                        bulkRequest.add(indexRequest);
+
+                        // Exit after max limit number of tweets
+                        consumedTweetCount += 1;
+                        if (consumedTweetCount == TWEET_CONSUME_LIMIT) {
+                            keepConsuming = false;
+                            logger.info("Max limit reached. Discarding other records. \n");
+                            break;
+                        }
+                    }
+                }
+                // If there are records in the bulk requests then send to elastic search.
+                if (bulkRequest.requests() != null && !bulkRequest.requests().isEmpty()) {
+                    BulkResponse bulkResponse = restClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+
                     logger.info("Record indexed in Elasticsearch. \n"
-                            + "Id: " + indexResponse.getId());
+                            + "Size: " + bulkResponse.getItems().length);
 
                     // Added a delay to see what's printing on console
                     Thread.sleep(1000);
-
-                    // Exit after max limit number of tweets
-                    consumedTweetCount += 1;
-                    if (consumedTweetCount == TWEET_CONSUME_LIMIT) {
-                        keepConsuming = false;
-                        logger.info("Max limit reached. Exiting now. \n");
-                        break;
-                    }
                 }
             }
         } catch (Exception ex) {

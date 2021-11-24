@@ -16,12 +16,14 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 /**
- * This is Twitter consumer and will upload tweets in Elastic search cloud.
+ * This is idempotent Twitter consumer and will upload tweets in Elastic search cloud using an ID.
  *
  * @author Ashesh
  */
-public class BonsaiElasticsearchTwitterConsumer {
-    private static final Logger logger = LoggerFactory.getLogger(BonsaiElasticsearchTwitterConsumer.class);
+public class IdempotentElasticsearchTwitterConsumer {
+    private static final Logger logger = LoggerFactory.getLogger(IdempotentElasticsearchTwitterConsumer.class);
+    private static final String BOOTSTRAP_SERVER = "localhost:9092";
+    private static final String GROUP_ID = "binarray-twitter-consumer";
     private static final String KAFKA_TOPIC = "twitter_kafka_topic";
     private static final String ELASTICSEARCH_INDEX = "twitter_dev";
     /*
@@ -49,22 +51,31 @@ public class BonsaiElasticsearchTwitterConsumer {
                             + "Partition: " + record.partition() + "\n"
                             + "Offset: " + record.offset());
 
-                    IndexRequest indexRequest = new IndexRequest(ELASTICSEARCH_INDEX, ELASTICSEARCH_TYPE);
-                    indexRequest.source(record.value(), XContentType.JSON);
+                    // Generate keys for the record (comment the line for either approaches)
+                    String recordKey = null;
+                    // Option-1: Create key using the record (topic, partition, offset)
+                    //recordKey = record.topic() + "_" + record.partition() + "_" + record.offset();
 
-                    IndexResponse indexResponse = restClient.index(indexRequest, RequestOptions.DEFAULT);
-                    logger.info("Record indexed in Elasticsearch. \n"
-                            + "Id: " + indexResponse.getId());
+                    // Option-2: Create key by extracting key from record (if exists)
+                    recordKey = TwitterConsumerUtils.getKeyForTweet(record.value());
+                    if (recordKey != null) {
+                        IndexRequest indexRequest = new IndexRequest(ELASTICSEARCH_INDEX, ELASTICSEARCH_TYPE, recordKey);
+                        indexRequest.source(record.value(), XContentType.JSON);
 
-                    // Added a delay to see what's printing on console
-                    Thread.sleep(1000);
+                        IndexResponse indexResponse = restClient.index(indexRequest, RequestOptions.DEFAULT);
+                        logger.info("Record indexed in Elasticsearch. \n"
+                                + "Id: " + indexResponse.getId());
 
-                    // Exit after max limit number of tweets
-                    consumedTweetCount += 1;
-                    if (consumedTweetCount == TWEET_CONSUME_LIMIT) {
-                        keepConsuming = false;
-                        logger.info("Max limit reached. Exiting now. \n");
-                        break;
+                        // Added a delay to see what's printing on console
+                        Thread.sleep(1000);
+
+                        // Exit after max limit number of tweets
+                        consumedTweetCount += 1;
+                        if (consumedTweetCount == TWEET_CONSUME_LIMIT) {
+                            keepConsuming = false;
+                            logger.info("Max limit reached. Exiting now. \n");
+                            break;
+                        }
                     }
                 }
             }
