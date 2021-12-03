@@ -12,6 +12,8 @@
         <module>kafka-quickstart</module>
         <module>kafka-elasticsearch</module>
         <module>kafka-common</module>
+        <module>kafka-connect</module>
+        <module>kafka-streams</module>
     </modules>
 
     <properties>
